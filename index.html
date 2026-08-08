@@ -3,53 +3,92 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>Cafés & Desayunos</title>
 
+  <meta name="theme-color" content="#081427" />
   <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#8B5E3C" />
-
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="container">
-    <h1>☕ Cafés & Desayunos</h1>
 
-    <div class="card">
-      <h2>Grupo</h2>
-      <select id="groupSelect">
-        <option>Amigos</option>
-      </select>
-    </div>
+  <div class="app">
 
-    <div class="card">
-      <h2>¿Quién paga?</h2>
-      <p id="selectedPerson" class="selected">Pulsa el botón para elegir</p>
+    <!-- Cabecera -->
+    <header class="header">
+      <div class="header-text">
+        <h1 id="groupName">Perenquenes</h1>
+        <p class="subtitle">☕ Cafés & Desayunos</p>
+      </div>
 
-      <button id="pickButton" class="primary">
-        Elegir quién paga
+      <button class="menu-button" aria-label="Menú">
+        ⋮
       </button>
+    </header>
 
-      <button id="confirmButton" disabled>
-        Confirmar pago
+    <!-- Siguiente pagador -->
+    <section class="card next-card">
+      <h2>Siguiente pagador</h2>
+      <div id="nextPayer" class="next-payer">Luis</div>
+    </section>
+
+    <!-- Contadores -->
+    <section class="card">
+      <h2>Contadores</h2>
+
+      <div class="counter-row">
+        <span class="name">Ana</span>
+        <span class="count">1</span>
+      </div>
+
+      <div class="counter-row">
+        <span class="name">Iván</span>
+        <span class="count">2</span>
+      </div>
+
+      <div class="counter-row">
+        <span class="name">Luis</span>
+        <span class="count">0</span>
+      </div>
+
+      <div class="counter-row">
+        <span class="name">Breo</span>
+        <span class="count">1</span>
+      </div>
+    </section>
+
+    <!-- Botón principal -->
+    <section class="card action-card">
+      <button id="registerButton" class="primary-button">
+        Registrar Café / Desayuno
       </button>
-    </div>
+    </section>
 
-    <div class="card">
-      <h2>Contador</h2>
-      <ul id="counterList">
-        <li>Ana — 0</li>
-        <li>Iván — 0</li>
-        <li>Luis — 0</li>
-        <li>Breo — 0</li>
-      </ul>
-    </div>
-
-    <div class="card">
+    <!-- Historial -->
+    <section class="card">
       <h2>Historial</h2>
-      <ul id="historyList">
-        <li>Aún no hay registros</li>
-      </ul>
-    </div>
+
+      <div class="history-row">
+        <span class="name">Breo</span>
+        <span class="date">07/08/2026</span>
+      </div>
+
+      <div class="history-row">
+        <span class="name">Iván</span>
+        <span class="date">31/07/2026</span>
+      </div>
+
+      <div class="history-row">
+        <span class="name">Ana</span>
+        <span class="date">23/07/2026</span>
+      </div>
+
+      <div class="history-row">
+        <span class="name">Iván</span>
+        <span class="date">18/07/2026</span>
+      </div>
+    </section>
+
   </div>
 
   <script src="app.js"></script>
