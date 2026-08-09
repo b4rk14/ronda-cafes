@@ -1,5 +1,9 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbycHv1h_dSBfkMiW4D2I4CBvYOt6mrZtbpQZ55v5xNIXuqZTzBd2KR4-Kwg1fvxEdjLMA/exec";
 
+const GROUPS = ["Perenquenes", "Comando Café"];
+
+let currentGroup = localStorage.getItem("coffeeGroup") || "Perenquenes";
+
 const memberNames = ["Ana", "Iván", "Luis", "Breo"];
 
 let members = [];
@@ -16,13 +20,15 @@ const registerButton = document.getElementById("registerButton");
 
 async function loadData() {
   try {
-    const response = await fetch(API_URL);
+    const response = await fetch(`${API_URL}?group=${encodeURIComponent(currentGroup)}`);
     history = await response.json();
 
     members = memberNames.map(name => ({
       name,
       count: history.filter(h => h.name === name).length
     }));
+
+    document.getElementById("groupName").textContent = currentGroup;
 
     render();
   } catch (error) {
@@ -250,6 +256,48 @@ function openDeleteModal(entry) {
 }
 
 // ==========================
+// Selector de grupos  <--- AQUÍ
+// ==========================
+
+function openGroupModal() {
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+
+  const modal = document.createElement("div");
+  modal.className = "modal";
+
+  const title = document.createElement("h3");
+  title.textContent = "Seleccionar grupo";
+
+  const list = document.createElement("div");
+  list.className = "modal-list";
+
+  GROUPS.forEach(group => {
+    const button = document.createElement("button");
+    button.className = "member-option";
+
+    if (group === currentGroup) {
+      button.classList.add("selected");
+    }
+
+    button.textContent = group;
+
+    button.addEventListener("click", async () => {
+      currentGroup = group;
+      localStorage.setItem("coffeeGroup", group);
+      closeModal(overlay);
+      await loadData();
+    });
+
+    list.appendChild(button);
+  });
+
+  modal.append(title, list);
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+}
+
+// ==========================
 // Acciones
 // ==========================
 
@@ -286,6 +334,7 @@ async function registerPayment(name) {
       method: "POST",
       headers: { "Content-Type": "text/plain" },
       body: JSON.stringify({
+        group: currentGroup,
         name,
         date: timestamp
       })
@@ -311,6 +360,7 @@ async function deleteHistoryEntry(entry) {
     headers: { "Content-Type": "text/plain" },
     body: JSON.stringify({
       _method: "DELETE",
+      group: currentGroup,
       id: entry.id
     })
   });
@@ -323,5 +373,10 @@ async function deleteHistoryEntry(entry) {
 // ==========================
 
 registerButton.addEventListener("click", openPayerModal);
+
+document.querySelector(".menu-button")
+  .addEventListener("click", openGroupModal);
+
+loadData();
 
 loadData();
