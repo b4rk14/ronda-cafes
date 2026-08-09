@@ -263,6 +263,9 @@ async function registerPayment(name) {
     })
   });
 
+  // Espera breve para que Google Sheets termine de escribir
+  await new Promise(resolve => setTimeout(resolve, 300));
+
   await loadData();
 }
 
