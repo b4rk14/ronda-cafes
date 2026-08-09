@@ -123,7 +123,11 @@ function renderHistory() {
     row.innerHTML = `
       <span class="name">${item.name}</span>
       <div class="history-date-time">${date} ${hours}:${minutes}</div>
-      <button class="delete-history" aria-label="Eliminar registro">🗑️</button>
+      <button
+        class="delete-history"
+        aria-label="Eliminar registro"
+        ${item.pending ? "disabled" : ""}
+      >🗑️</button>
     `;
 
 row.querySelector(".delete-history").addEventListener("click", () => {
@@ -325,9 +329,10 @@ async function registerPayment(name) {
 
   // Añadir el registro al historial local
   history.push({
-    id: Date.now(), // ID temporal
+    id: Date.now(),
     name,
-    date: timestamp
+    date: timestamp,
+    pending: true
   });
 
   // Incrementar el contador local
