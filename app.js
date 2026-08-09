@@ -68,7 +68,8 @@ function renderHistory() {
   const oldRows = historyContainer.querySelectorAll(".history-row");
   oldRows.forEach(r => r.remove());
 
-  const recent = history.slice(-5).reverse();
+  // Últimos 3 registros, del más reciente al más antiguo
+  const recent = history.slice(-3).reverse();
 
   recent.forEach(item => {
     const row = document.createElement("div");
@@ -77,7 +78,12 @@ function renderHistory() {
     row.innerHTML = `
       <span class="name">${item.name}</span>
       <span class="date">${item.date}</span>
+      <button class="delete-history" aria-label="Eliminar registro">🗑️</button>
     `;
+
+    row.querySelector(".delete-history").addEventListener("click", () => {
+      deleteHistoryEntry(item);
+    });
 
     historyContainer.appendChild(row);
   });
@@ -182,6 +188,28 @@ function registerPayment(name) {
     name,
     date: getToday()
   });
+
+  render();
+}
+
+function deleteHistoryEntry(entry) {
+  if (!confirm(`¿Eliminar este registro?\n\n${entry.name} — ${entry.date}`)) {
+    return;
+  }
+
+  // Buscar el registro real en el historial (desde el final por si hubiera duplicados)
+  for (let i = history.length - 1; i >= 0; i--) {
+    if (history[i].name === entry.name && history[i].date === entry.date) {
+      history.splice(i, 1);
+      break;
+    }
+  }
+
+  // Restar un café al contador correspondiente
+  const member = members.find(m => m.name === entry.name);
+  if (member && member.count > 0) {
+    member.count -= 1;
+  }
 
   render();
 }
