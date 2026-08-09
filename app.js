@@ -170,6 +170,7 @@ function openPayerModal() {
   const list = document.createElement("div");
   list.className = "modal-list";
 
+  const minCount = Math.min(...members.map(m => m.count));
   let selectedName = getRecommendedPayer().name;
 
   members.forEach(member => {
@@ -181,17 +182,25 @@ function openPayerModal() {
       <span>${member.name}</span>
       ${member.name === selectedName ? '<span class="star">★</span>' : ''}
     `;
-
+    
     button.addEventListener("click", () => {
       selectedName = member.name;
-      list.querySelectorAll(".member-option").forEach(el => el.classList.remove("selected"));
+    
+      list.querySelectorAll(".member-option").forEach(el => {
+        el.classList.remove("selected");
+        const star = el.querySelector(".star");
+        if (star) star.remove();
+      });
+    
       button.classList.add("selected");
-
-      list.querySelectorAll(".star").forEach(el => el.remove());
-      const star = document.createElement("span");
-      star.className = "star";
-      star.textContent = "★";
-      button.appendChild(star);
+    
+      // Solo mostramos la estrella si el seleccionado tiene el contador mínimo
+      if (member.count === minCount) {
+        const star = document.createElement("span");
+        star.className = "star";
+        star.textContent = "★";
+        button.appendChild(star);
+      }
     });
 
     list.appendChild(button);
