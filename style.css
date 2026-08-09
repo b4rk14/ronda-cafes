@@ -58,6 +58,19 @@ body {
   color: var(--muted);
   font-size: 1.3rem;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.coffee-icon {
+  color: var(--accent);
+  font-size: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .menu-button {
@@ -429,16 +442,6 @@ body {
   color: inherit;
   font-size: inherit;
   font-weight: inherit;
-}
-
-.coffee-icon {
-  color: var(--accent);
-  font-size: 1.35rem;
-  margin-right: 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  vertical-align: middle;
 }
 
 .button-icon {
