@@ -243,12 +243,20 @@ body {
     font-size: 1.05rem;
   }
 
-  .primary-button {
-    font-size: 1.5rem;
+  .action-card {
+    padding: 16px;
   }
 
-  .button-icon {
-    font-size: 1.9rem;
+  .primary-button {
+    font-size: 1.15rem;
+    padding: 20px 16px;
+    gap: 0;
+    white-space: nowrap;
+  }
+
+  /* Ocultar el icono del botón solo en móvil */
+  .primary-button .button-icon {
+    display: none;
   }
 }
 
