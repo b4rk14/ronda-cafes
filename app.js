@@ -174,6 +174,62 @@ function closeModal(overlay) {
   setTimeout(() => overlay.remove(), 220);
 }
 
+function openDeleteModal(entry) {
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+
+  const modal = document.createElement("div");
+  modal.className = "modal";
+
+  const title = document.createElement("h3");
+  title.textContent = "Eliminar registro";
+
+  const record = document.createElement("div");
+  record.className = "delete-record";
+  record.innerHTML = `
+    <div class="delete-name">${entry.name}</div>
+    <div class="delete-date">${entry.date}</div>
+  `;
+
+  const actions = document.createElement("div");
+  actions.className = "modal-actions";
+
+  const cancel = document.createElement("button");
+  cancel.className = "secondary-button";
+  cancel.textContent = "Cancelar";
+
+  cancel.addEventListener("click", () => closeModal(overlay));
+
+  const confirm = document.createElement("button");
+  confirm.className = "danger-button";
+  confirm.textContent = "Eliminar";
+
+  confirm.addEventListener("click", () => {
+    // Buscar el registro real (desde el final por si hubiera duplicados)
+    for (let i = history.length - 1; i >= 0; i--) {
+      if (history[i].name === entry.name && history[i].date === entry.date) {
+        history.splice(i, 1);
+        break;
+      }
+    }
+
+    // Restar un café al contador correspondiente
+    const member = members.find(m => m.name === entry.name);
+    if (member && member.count > 0) {
+      member.count -= 1;
+    }
+
+    render();
+    closeModal(overlay);
+  });
+
+  actions.append(cancel, confirm);
+  modal.append(title, record, actions);
+  overlay.appendChild(modal);
+
+  document.body.appendChild(overlay);
+}
+
 // ==========================
 // Registro
 // ==========================
@@ -193,25 +249,7 @@ function registerPayment(name) {
 }
 
 function deleteHistoryEntry(entry) {
-  if (!confirm(`¿Eliminar este registro?\n\n${entry.name} — ${entry.date}`)) {
-    return;
-  }
-
-  // Buscar el registro real en el historial (desde el final por si hubiera duplicados)
-  for (let i = history.length - 1; i >= 0; i--) {
-    if (history[i].name === entry.name && history[i].date === entry.date) {
-      history.splice(i, 1);
-      break;
-    }
-  }
-
-  // Restar un café al contador correspondiente
-  const member = members.find(m => m.name === entry.name);
-  if (member && member.count > 0) {
-    member.count -= 1;
-  }
-
-  render();
+  openDeleteModal(entry);
 }
 
 // ==========================
