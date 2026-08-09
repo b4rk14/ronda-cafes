@@ -67,11 +67,13 @@ function renderCounters() {
 
     countersContainer.appendChild(row);
   });
+}
 
-  function renderHistory() {
+function renderHistory() {
   const oldRows = historyContainer.querySelectorAll(".history-row");
   oldRows.forEach(r => r.remove());
 
+  // Ordenar por fecha y hora descendente y mostrar solo los 3 últimos
   const recent = [...history]
     .sort((a, b) => {
       const [dateA, timeA = "00:00"] = a.date.split(" ");
