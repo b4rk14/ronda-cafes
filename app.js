@@ -22,7 +22,7 @@ let recommendedPayer = null;
 
 // Referencias DOM
 const nextPayerEl = document.getElementById("nextPayer");
-const counterRows = document.querySelectorAll(".counter-row");
+const countersContainer = document.getElementById("countersContainer");
 const historyContainer = document.querySelector(".card:last-of-type");
 const registerButton = document.getElementById("registerButton");
 
@@ -49,9 +49,7 @@ function chooseRecommendedPayer() {
 }
 
 function renderCounters() {
-  counterRows.forEach(row => row.remove());
-
-  const countersCard = document.querySelectorAll(".card")[1];
+  countersContainer.innerHTML = "";
 
   members.forEach(member => {
     const row = document.createElement("div");
@@ -62,7 +60,7 @@ function renderCounters() {
       <span class="count">${member.count}</span>
     `;
 
-    countersCard.appendChild(row);
+    countersContainer.appendChild(row);
   });
 }
 
