@@ -101,10 +101,7 @@ const [hours, minutes] = time.split(":");
 
 row.innerHTML = `
   <span class="name">${item.name}</span>
-  <div class="history-date-time">
-    <span class="history-date">${date}</span>
-    <span class="history-time">${hours}:${minutes}</span>
-  </div>
+  <div class="history-date-time">${date} ${hours}:${minutes}</div>
   <button class="delete-history" aria-label="Eliminar registro">🗑️</button>
 `;
 
