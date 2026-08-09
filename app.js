@@ -29,7 +29,6 @@ const registerButton = document.getElementById("registerButton");
 // ==========================
 // Utilidades
 // ==========================
-
 function getTimestamp() {
   const now = new Date();
 
@@ -39,8 +38,9 @@ function getTimestamp() {
 
   const h = String(now.getHours()).padStart(2, "0");
   const min = String(now.getMinutes()).padStart(2, "0");
+  const sec = String(now.getSeconds()).padStart(2, "0");
 
-  return `${d}/${m}/${y} ${h}:${min}`;
+  return `${d}/${m}/${y} ${h}:${min}:${sec}`;
 }
 
 function chooseRecommendedPayer() {
@@ -82,11 +82,11 @@ function renderHistory() {
       const [da, ma, ya] = dateA.split("/").map(Number);
       const [db, mb, yb] = dateB.split("/").map(Number);
 
-      const [ha, mina] = timeA.split(":").map(Number);
-      const [hb, minb] = timeB.split(":").map(Number);
+const [ha, mina, seca = 0] = timeA.split(":").map(Number);
+const [hb, minb, secb = 0] = timeB.split(":").map(Number);
 
-      const tsA = new Date(ya, ma - 1, da, ha, mina).getTime();
-      const tsB = new Date(yb, mb - 1, db, hb, minb).getTime();
+const tsA = new Date(ya, ma - 1, da, ha, mina, seca).getTime();
+const tsB = new Date(yb, mb - 1, db, hb, minb, secb).getTime();
 
       return tsB - tsA;
     })
@@ -96,11 +96,15 @@ function renderHistory() {
     const row = document.createElement("div");
     row.className = "history-row";
 
-    row.innerHTML = `
-      <span class="name">${item.name}</span>
-      <span class="date">${item.date}</span>
-      <button class="delete-history" aria-label="Eliminar registro">🗑️</button>
-    `;
+const [, time = "00:00:00"] = item.date.split(" ");
+const [hours, minutes] = time.split(":");
+const displayTime = `${hours}:${minutes}`;
+
+row.innerHTML = `
+  <span class="name">${item.name}</span>
+  <span class="date">${displayTime}</span>
+  <button class="delete-history" aria-label="Eliminar registro">🗑️</button>
+`;
 
     row.querySelector(".delete-history").addEventListener("click", () => {
       deleteHistoryEntry(item);
