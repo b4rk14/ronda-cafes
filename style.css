@@ -449,6 +449,11 @@ body {
   transform: scale(0.92);
 }
 
+.delete-history:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
 .history-date-time {
   width: 140px;
   display: flex;
