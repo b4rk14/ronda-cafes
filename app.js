@@ -95,14 +95,17 @@ const tsB = new Date(yb, mb - 1, db, hb, minb, secb).getTime();
   recent.forEach(item => {
     const row = document.createElement("div");
     row.className = "history-row";
-
+    
 const [date, time = "00:00:00"] = item.date.split(" ");
 const [hours, minutes] = time.split(":");
-const displayDateTime = `${date} ${hours}:${minutes}`;
+const displayTime = `${hours}:${minutes}`;
 
 row.innerHTML = `
   <span class="name">${item.name}</span>
-  <span class="date">${displayDateTime}</span>
+  <div class="history-date-time">
+    <span class="history-date">${date}</span>
+    <span class="history-time">${displayTime}</span>
+  </div>
   <button class="delete-history" aria-label="Eliminar registro">🗑️</button>
 `;
 
