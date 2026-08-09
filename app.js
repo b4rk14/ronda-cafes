@@ -12,6 +12,8 @@ const GROUP_MEMBERS = {
 let members = [];
 let history = [];
 
+const groupCache = {};
+
 const nextPayerEl = document.getElementById("nextPayer");
 const countersContainer = document.getElementById("countersContainer");
 const historyContainer = document.querySelector(".card:last-of-type");
@@ -20,25 +22,45 @@ const registerButton = document.getElementById("registerButton");
 // ==========================
 // Cargar datos desde Google Sheets
 // ==========================
+async function loadData(force = false) {
+  // Si ya tenemos el grupo en memoria, lo mostramos al instante
+  if (!force && groupCache[currentGroup]) {
+    history = [...groupCache[currentGroup].history];
+    members = [...groupCache[currentGroup].members];
+    document.getElementById("groupName").textContent = currentGroup;
+    render();
 
-async function loadData() {
+    // Sincronización silenciosa en segundo plano
+    syncGroup();
+    return;
+  }
+
+  await syncGroup();
+}
+
+async function syncGroup() {
   try {
     const response = await fetch(`${API_URL}?group=${encodeURIComponent(currentGroup)}`);
     history = await response.json();
 
     const memberNames = GROUP_MEMBERS[currentGroup] || [];
-    
+
     members = memberNames.map(name => ({
       name,
       count: history.filter(h => h.name === name).length
     }));
 
-    document.getElementById("groupName").textContent = currentGroup;
+    // Guardamos una copia en caché
+    groupCache[currentGroup] = {
+      history: [...history],
+      members: [...members]
+    };
 
+    document.getElementById("groupName").textContent = currentGroup;
     render();
+
   } catch (error) {
     console.error("Error cargando datos:", error);
-    alert("No se pudo conectar con Google Sheets.");
   }
 }
 
@@ -359,17 +381,34 @@ async function registerPayment(name) {
 }
 
 async function deleteHistoryEntry(entry) {
-  await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "text/plain" },
-    body: JSON.stringify({
-      _method: "DELETE",
-      group: currentGroup,
-      id: entry.id
-    })
-  });
+  // Actualización inmediata
+  history = history.filter(h => h.id !== entry.id);
 
-  await loadData();
+  const member = members.find(m => m.name === entry.name);
+  if (member && member.count > 0) {
+    member.count--;
+  }
+
+  render();
+
+  try {
+    await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify({
+        _method: "DELETE",
+        group: currentGroup,
+        id: entry.id
+      })
+    });
+
+    await loadData(true);
+
+  } catch (error) {
+    console.error(error);
+    await loadData(true);
+  }
+}it loadData();
 }
 
 // ==========================
@@ -381,4 +420,19 @@ registerButton.addEventListener("click", openPayerModal);
 document.querySelector(".menu-button")
   .addEventListener("click", openGroupModal);
 
+// Carga inicial
 loadData();
+
+// Sincronización al volver a la app
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") {
+    loadData(true);
+  }
+});
+
+// Sincronización periódica muy ligera
+setInterval(() => {
+  if (document.visibilityState === "visible") {
+    loadData(true);
+  }
+}, 60000);
