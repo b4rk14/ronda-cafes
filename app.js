@@ -1,34 +1,40 @@
-// ==========================
-// Cafés & Desayunos - v1.0
-// ==========================
+const API_URL = "https://script.google.com/macros/s/AKfycbycHv1h_dSBfkMiW4D2I4CBvYOt6mrZtbpQZ55v5xNIXuqZTzBd2KR4-Kwg1fvxEdjLMA/exec";
 
-// Datos iniciales (más adelante vendrán de Google Sheets)
-const members = [
-  { name: "Ana", count: 1 },
-  { name: "Iván", count: 2 },
-  { name: "Luis", count: 0 },
-  { name: "Breo", count: 1 }
-];
+const memberNames = ["Ana", "Iván", "Luis", "Breo"];
 
-// Historial completo (la interfaz solo mostrará los últimos 5)
-const history = [
-  { name: "Breo", date: "07/08/2026 09:42" },
-  { name: "Iván", date: "31/07/2026 09:18" },
-  { name: "Ana", date: "23/07/2026 08:57" },
-  { name: "Iván", date: "18/07/2026 09:31" }
-];
+let members = [];
+let history = [];
 
-let recommendedPayer = null;
-
-// Referencias DOM
 const nextPayerEl = document.getElementById("nextPayer");
 const countersContainer = document.getElementById("countersContainer");
 const historyContainer = document.querySelector(".card:last-of-type");
 const registerButton = document.getElementById("registerButton");
 
 // ==========================
+// Cargar datos desde Google Sheets
+// ==========================
+
+async function loadData() {
+  try {
+    const response = await fetch(API_URL);
+    history = await response.json();
+
+    members = memberNames.map(name => ({
+      name,
+      count: history.filter(h => h.name === name).length
+    }));
+
+    render();
+  } catch (error) {
+    console.error("Error cargando datos:", error);
+    alert("No se pudo conectar con Google Sheets.");
+  }
+}
+
+// ==========================
 // Utilidades
 // ==========================
+
 function getTimestamp() {
   const now = new Date();
 
@@ -43,14 +49,19 @@ function getTimestamp() {
   return `${d}/${m}/${y} ${h}:${min}:${sec}`;
 }
 
-function chooseRecommendedPayer() {
-  const min = Math.min(...members.map(m => m.count));
-  const candidates = members.filter(m => m.count === min);
+function getRecommendedPayer() {
+  return members.reduce((lowest, current) =>
+    current.count < lowest.count ? current : lowest
+  );
+}
 
-  recommendedPayer =
-    candidates[Math.floor(Math.random() * candidates.length)];
+// ==========================
+// Render
+// ==========================
 
-  nextPayerEl.textContent = recommendedPayer.name;
+function renderNextPayer() {
+  const recommended = getRecommendedPayer();
+  nextPayerEl.textContent = recommended.name;
 }
 
 function renderCounters() {
@@ -73,20 +84,19 @@ function renderHistory() {
   const oldRows = historyContainer.querySelectorAll(".history-row");
   oldRows.forEach(r => r.remove());
 
-  // Ordenar por fecha y hora descendente y mostrar solo los 3 últimos
   const recent = [...history]
     .sort((a, b) => {
-      const [dateA, timeA = "00:00"] = a.date.split(" ");
-      const [dateB, timeB = "00:00"] = b.date.split(" ");
+      const [dateA, timeA = "00:00:00"] = a.date.split(" ");
+      const [dateB, timeB = "00:00:00"] = b.date.split(" ");
 
       const [da, ma, ya] = dateA.split("/").map(Number);
       const [db, mb, yb] = dateB.split("/").map(Number);
 
-const [ha, mina, seca = 0] = timeA.split(":").map(Number);
-const [hb, minb, secb = 0] = timeB.split(":").map(Number);
+      const [ha, mina, seca = 0] = timeA.split(":").map(Number);
+      const [hb, minb, secb = 0] = timeB.split(":").map(Number);
 
-const tsA = new Date(ya, ma - 1, da, ha, mina, seca).getTime();
-const tsB = new Date(yb, mb - 1, db, hb, minb, secb).getTime();
+      const tsA = new Date(ya, ma - 1, da, ha, mina, seca).getTime();
+      const tsB = new Date(yb, mb - 1, db, hb, minb, secb).getTime();
 
       return tsB - tsA;
     })
@@ -95,15 +105,15 @@ const tsB = new Date(yb, mb - 1, db, hb, minb, secb).getTime();
   recent.forEach(item => {
     const row = document.createElement("div");
     row.className = "history-row";
-    
-const [date, time = "00:00:00"] = item.date.split(" ");
-const [hours, minutes] = time.split(":");
 
-row.innerHTML = `
-  <span class="name">${item.name}</span>
-  <div class="history-date-time">${date} ${hours}:${minutes}</div>
-  <button class="delete-history" aria-label="Eliminar registro">🗑️</button>
-`;
+    const [date, time = "00:00:00"] = item.date.split(" ");
+    const [hours, minutes] = time.split(":");
+
+    row.innerHTML = `
+      <span class="name">${item.name}</span>
+      <div class="history-date-time">${date} ${hours}:${minutes}</div>
+      <button class="delete-history" aria-label="Eliminar registro">🗑️</button>
+    `;
 
     row.querySelector(".delete-history").addEventListener("click", () => {
       deleteHistoryEntry(item);
@@ -114,14 +124,23 @@ row.innerHTML = `
 }
 
 function render() {
+  renderNextPayer();
   renderCounters();
   renderHistory();
-  chooseRecommendedPayer();
 }
 
 // ==========================
-// Modal de selección
+// Modales
 // ==========================
+
+function closeModal(overlay) {
+  overlay.classList.add("closing");
+  overlay.addEventListener(
+    "transitionend",
+    () => overlay.remove(),
+    { once: true }
+  );
+}
 
 function openPayerModal() {
   const overlay = document.createElement("div");
@@ -131,38 +150,37 @@ function openPayerModal() {
   modal.className = "modal";
 
   const title = document.createElement("h3");
-  title.textContent = "Registrar Café / Desayuno";
+  title.textContent = "Registrar café / desayuno";
 
   const subtitle = document.createElement("p");
   subtitle.className = "modal-subtitle";
-  subtitle.textContent = "Selecciona quién ha pagado";
+  subtitle.textContent = "Selecciona quién ha pagado hoy.";
 
   const list = document.createElement("div");
   list.className = "modal-list";
 
-  let selected = recommendedPayer.name;
+  let selectedName = getRecommendedPayer().name;
 
   members.forEach(member => {
     const button = document.createElement("button");
     button.className = "member-option";
-
-    if (member.name === recommendedPayer.name) {
-      button.classList.add("selected");
-    }
+    if (member.name === selectedName) button.classList.add("selected");
 
     button.innerHTML = `
-  <span>${member.name}</span>
-  ${member.name === recommendedPayer.name ? '<span class="star">★</span>' : ''}
-`;
+      <span>${member.name}</span>
+      ${member.name === selectedName ? '<span class="star">★</span>' : ''}
+    `;
 
     button.addEventListener("click", () => {
-      selected = member.name;
-
-      list.querySelectorAll(".member-option").forEach(b => {
-        b.classList.remove("selected");
-      });
-
+      selectedName = member.name;
+      list.querySelectorAll(".member-option").forEach(el => el.classList.remove("selected"));
       button.classList.add("selected");
+
+      list.querySelectorAll(".star").forEach(el => el.remove());
+      const star = document.createElement("span");
+      star.className = "star";
+      star.textContent = "★";
+      button.appendChild(star);
     });
 
     list.appendChild(button);
@@ -174,28 +192,21 @@ function openPayerModal() {
   const cancel = document.createElement("button");
   cancel.className = "secondary-button";
   cancel.textContent = "Cancelar";
-
-cancel.addEventListener("click", () => closeModal(overlay));
+  cancel.addEventListener("click", () => closeModal(overlay));
 
   const confirm = document.createElement("button");
   confirm.className = "primary-button";
   confirm.textContent = "Confirmar";
-
-confirm.addEventListener("click", () => {
-  registerPayment(selected);
-  closeModal(overlay);
-});
+  confirm.addEventListener("click", async () => {
+    await registerPayment(selectedName);
+    closeModal(overlay);
+  });
 
   actions.append(cancel, confirm);
   modal.append(title, subtitle, list, actions);
   overlay.appendChild(modal);
 
   document.body.appendChild(overlay);
-}
-
-function closeModal(overlay) {
-  overlay.classList.add("closing");
-  setTimeout(() => overlay.remove(), 220);
 }
 
 function openDeleteModal(entry) {
@@ -221,29 +232,13 @@ function openDeleteModal(entry) {
   const cancel = document.createElement("button");
   cancel.className = "secondary-button";
   cancel.textContent = "Cancelar";
-
   cancel.addEventListener("click", () => closeModal(overlay));
 
   const confirm = document.createElement("button");
   confirm.className = "danger-button";
   confirm.textContent = "Eliminar";
-
-  confirm.addEventListener("click", () => {
-    // Buscar el registro real (desde el final por si hubiera duplicados)
-    for (let i = history.length - 1; i >= 0; i--) {
-      if (history[i].name === entry.name && history[i].date === entry.date) {
-        history.splice(i, 1);
-        break;
-      }
-    }
-
-    // Restar un café al contador correspondiente
-    const member = members.find(m => m.name === entry.name);
-    if (member && member.count > 0) {
-      member.count -= 1;
-    }
-
-    render();
+  confirm.addEventListener("click", async () => {
+    await deleteHistoryEntry(entry);
     closeModal(overlay);
   });
 
@@ -255,35 +250,39 @@ function openDeleteModal(entry) {
 }
 
 // ==========================
-// Registro
+// Acciones
 // ==========================
 
-function registerPayment(name) {
-  const member = members.find(m => m.name === name);
-  if (!member) return;
+async function registerPayment(name) {
+  await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain" },
+    body: JSON.stringify({
+      name,
+      date: getTimestamp()
+    })
+  });
 
-  member.count += 1;
-
-  history.push({
-  name,
-  date: getTimestamp()
-});
-
-  render();
+  await loadData();
 }
 
-function deleteHistoryEntry(entry) {
-  openDeleteModal(entry);
+async function deleteHistoryEntry(entry) {
+  await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain" },
+    body: JSON.stringify({
+      _method: "DELETE",
+      id: entry.id
+    })
+  });
+
+  await loadData();
 }
-
-// ==========================
-// Eventos
-// ==========================
-
-registerButton.addEventListener("click", openPayerModal);
 
 // ==========================
 // Inicio
 // ==========================
 
-render();
+registerButton.addEventListener("click", openPayerModal);
+
+loadData();
