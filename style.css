@@ -415,19 +415,21 @@ body {
 
 .history-date-time {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-}
-
-.history-date {
+  align-items: center;
+  gap: 10px;
   color: var(--muted);
   font-size: 1rem;
   font-weight: 500;
 }
 
+.history-date,
 .history-time {
-  color: var(--text);
-  font-size: 0.9rem;
-  font-weight: 600;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.button-icon {
+  font-size: 1.5rem;
+  line-height: 1;
 }
