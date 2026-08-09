@@ -341,6 +341,50 @@ body {
   opacity: 0;
 }
 
+/* ==========================
+   Modal de eliminación
+   ========================== */
+
+.delete-record {
+  background: var(--row);
+  border-radius: 18px;
+  padding: 18px;
+  margin: 18px 0 22px;
+}
+
+.delete-name {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.delete-date {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 1rem;
+}
+
+.danger-button {
+  flex: 1;
+  border: none;
+  border-radius: 18px;
+  background: #c23b3b;
+  color: white;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 16px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.08s ease;
+}
+
+.danger-button:hover {
+  background: #d94a4a;
+}
+
+.danger-button:active {
+  transform: scale(0.98);
+}
+
 /* Papelera del historial */
 .delete-history {
   background: none;
