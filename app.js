@@ -383,5 +383,3 @@ document.querySelector(".menu-button")
   .addEventListener("click", openGroupModal);
 
 loadData();
-
-loadData();
