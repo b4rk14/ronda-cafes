@@ -22,20 +22,25 @@ const registerButton = document.getElementById("registerButton");
 // ==========================
 // Cargar datos desde Google Sheets
 // ==========================
-async function loadData(force = false) {
-  // Si ya tenemos el grupo en memoria, lo mostramos al instante
-  if (!force && groupCache[currentGroup]) {
-    history = [...groupCache[currentGroup].history];
-    members = [...groupCache[currentGroup].members];
+async function loadData() {
+  try {
+    const response = await fetch(`${API_URL}?group=${encodeURIComponent(currentGroup)}`);
+    history = await response.json();
+
+    const memberNames = GROUP_MEMBERS[currentGroup] || [];
+
+    members = memberNames.map(name => ({
+      name,
+      count: history.filter(h => h.name === name).length
+    }));
+
     document.getElementById("groupName").textContent = currentGroup;
+
     render();
-
-    // Sincronización silenciosa en segundo plano
-    syncGroup();
-    return;
+  } catch (error) {
+    console.error("Error cargando datos:", error);
+    alert("No se pudo conectar con Google Sheets.");
   }
-
-  await syncGroup();
 }
 
 async function syncGroup() {
@@ -423,16 +428,9 @@ document.querySelector(".menu-button")
 // Carga inicial
 loadData();
 
-// Sincronización al volver a la app
+// Sincronizar cuando la app vuelve a primer plano
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") {
-    loadData(true);
+    loadData();
   }
 });
-
-// Sincronización periódica muy ligera
-setInterval(() => {
-  if (document.visibilityState === "visible") {
-    loadData(true);
-  }
-}, 60000);
