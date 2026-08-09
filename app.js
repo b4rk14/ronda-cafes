@@ -208,9 +208,9 @@ function openPayerModal() {
   const confirm = document.createElement("button");
   confirm.className = "primary-button";
   confirm.textContent = "Confirmar";
-  confirm.addEventListener("click", async () => {
-    await registerPayment(selectedName);
-    closeModal(overlay);
+  confirm.addEventListener("click", () => {
+    closeModal(overlay);        // Se cierra al instante
+    registerPayment(selectedName); // Se ejecuta en segundo plano
   });
 
   actions.append(cancel, confirm);
@@ -248,9 +248,9 @@ function openDeleteModal(entry) {
   const confirm = document.createElement("button");
   confirm.className = "danger-button";
   confirm.textContent = "Eliminar";
-  confirm.addEventListener("click", async () => {
-    await deleteHistoryEntry(entry);
-    closeModal(overlay);
+  confirm.addEventListener("click", () => {
+    closeModal(overlay);       // Se cierra al instante
+    deleteHistoryEntry(entry); // Borrado y sincronización en segundo plano
   });
 
   actions.append(cancel, confirm);
@@ -287,11 +287,11 @@ function openGroupModal() {
 
     button.textContent = group;
 
-    button.addEventListener("click", async () => {
+    button.addEventListener("click", () => {
       currentGroup = group;
       localStorage.setItem("coffeeGroup", group);
-      closeModal(overlay);
-      await loadData();
+      closeModal(overlay); // Se cierra inmediatamente
+      loadData();          // Carga el grupo en segundo plano
     });
 
     list.appendChild(button);
