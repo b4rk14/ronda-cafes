@@ -291,8 +291,9 @@ async function registerPayment(name) {
       })
     });
 
-    // Recargar desde Google para obtener el ID real
-    await loadData();
+setTimeout(() => {
+  loadData();
+}, 1500);
 
   } catch (error) {
     console.error("Error sincronizando con Google Sheets:", error);
