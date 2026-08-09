@@ -96,13 +96,13 @@ const tsB = new Date(yb, mb - 1, db, hb, minb, secb).getTime();
     const row = document.createElement("div");
     row.className = "history-row";
 
-const [, time = "00:00:00"] = item.date.split(" ");
+const [date, time = "00:00:00"] = item.date.split(" ");
 const [hours, minutes] = time.split(":");
-const displayTime = `${hours}:${minutes}`;
+const displayDateTime = `${date} ${hours}:${minutes}`;
 
 row.innerHTML = `
   <span class="name">${item.name}</span>
-  <span class="date">${displayTime}</span>
+  <span class="date">${displayDateTime}</span>
   <button class="delete-history" aria-label="Eliminar registro">🗑️</button>
 `;
 
