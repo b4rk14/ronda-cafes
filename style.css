@@ -340,3 +340,22 @@ body {
   transform: scale(0.96);
   opacity: 0;
 }
+
+/* Papelera del historial */
+.delete-history {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 1rem;
+  cursor: pointer;
+  margin-left: 12px;
+  transition: color 0.15s ease, transform 0.08s ease;
+}
+
+.delete-history:hover {
+  color: #ff6b6b;
+}
+
+.delete-history:active {
+  transform: scale(0.92);
+}
