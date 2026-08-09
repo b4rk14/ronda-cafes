@@ -70,20 +70,19 @@ function renderHistory() {
   const oldRows = historyContainer.querySelectorAll(".history-row");
   oldRows.forEach(r => r.remove());
 
-  history
-    .slice(-5)
-    .reverse()
-    .forEach(item => {
-      const row = document.createElement("div");
-      row.className = "history-row";
+  const recent = history.slice(-5).reverse();
 
-      row.innerHTML = `
-        <span class="name">${item.name}</span>
-        <span class="date">${item.date}</span>
-      `;
+  recent.forEach(item => {
+    const row = document.createElement("div");
+    row.className = "history-row";
 
-      historyContainer.appendChild(row);
-    });
+    row.innerHTML = `
+      <span class="name">${item.name}</span>
+      <span class="date">${item.date}</span>
+    `;
+
+    historyContainer.appendChild(row);
+  });
 }
 
 function render() {
@@ -124,9 +123,9 @@ function openPayerModal() {
     }
 
     button.innerHTML = `
-      <span>${member.name}</span>
-      ${member.name === recommendedPayer.name ? '<span class="badge">Recomendado</span>' : ''}
-    `;
+  <span>${member.name}</span>
+  ${member.name === recommendedPayer.name ? '<span class="star">★</span>' : ''}
+`;
 
     button.addEventListener("click", () => {
       selected = member.name;
@@ -148,22 +147,27 @@ function openPayerModal() {
   cancel.className = "secondary-button";
   cancel.textContent = "Cancelar";
 
-  cancel.addEventListener("click", () => overlay.remove());
+cancel.addEventListener("click", () => closeModal(overlay));
 
   const confirm = document.createElement("button");
   confirm.className = "primary-button";
   confirm.textContent = "Confirmar";
 
-  confirm.addEventListener("click", () => {
-    registerPayment(selected);
-    overlay.remove();
-  });
+confirm.addEventListener("click", () => {
+  registerPayment(selected);
+  closeModal(overlay);
+});
 
   actions.append(cancel, confirm);
   modal.append(title, subtitle, list, actions);
   overlay.appendChild(modal);
 
   document.body.appendChild(overlay);
+}
+
+function closeModal(overlay) {
+  overlay.classList.add("closing");
+  setTimeout(() => overlay.remove(), 220);
 }
 
 // ==========================
