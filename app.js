@@ -115,9 +115,9 @@ function renderHistory() {
       <button class="delete-history" aria-label="Eliminar registro">🗑️</button>
     `;
 
-    row.querySelector(".delete-history").addEventListener("click", () => {
-      deleteHistoryEntry(item);
-    });
+row.querySelector(".delete-history").addEventListener("click", () => {
+  openDeleteModal(item);
+});
 
     historyContainer.appendChild(row);
   });
@@ -254,19 +254,54 @@ function openDeleteModal(entry) {
 // ==========================
 
 async function registerPayment(name) {
-  await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "text/plain" },
-    body: JSON.stringify({
-      name,
-      date: getTimestamp()
-    })
+  // Guardamos la fecha una sola vez
+  const timestamp = getTimestamp();
+
+  // -------------------------
+  // Actualización inmediata
+  // -------------------------
+
+  // Añadir el registro al historial local
+  history.push({
+    id: Date.now(), // ID temporal
+    name,
+    date: timestamp
   });
 
-  // Espera breve para que Google Sheets termine de escribir
-  await new Promise(resolve => setTimeout(resolve, 300));
+  // Incrementar el contador local
+  const member = members.find(m => m.name === name);
+  if (member) {
+    member.count++;
+  }
 
-  await loadData();
+  // Redibujar la interfaz inmediatamente
+  render();
+
+  // -------------------------
+  // Sincronización con Google
+  // -------------------------
+
+  try {
+    await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify({
+        name,
+        date: timestamp
+      })
+    });
+
+    // Recargar desde Google para obtener el ID real
+    await loadData();
+
+  } catch (error) {
+    console.error("Error sincronizando con Google Sheets:", error);
+
+    // Si algo falla, recargamos desde Google
+    await loadData();
+
+    alert("No se pudo sincronizar el registro.");
+  }
 }
 
 async function deleteHistoryEntry(entry) {
