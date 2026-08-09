@@ -344,17 +344,16 @@ async function registerPayment(name) {
         date: timestamp
       })
     });
-
-setTimeout(() => {
-  loadData();
-}, 1500);
-
+  
+    // En cuanto Google confirma el guardado, recargamos los datos
+    loadData();
+  
   } catch (error) {
     console.error("Error sincronizando con Google Sheets:", error);
-
+  
     // Si algo falla, recargamos desde Google
-    await loadData();
-
+    loadData();
+  
     alert("No se pudo sincronizar el registro.");
   }
 }
