@@ -407,3 +407,22 @@ body {
 .delete-history:active {
   transform: scale(0.92);
 }
+
+.history-date-time {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.history-date {
+  color: var(--muted);
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.history-time {
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
