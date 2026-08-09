@@ -12,8 +12,6 @@ const GROUP_MEMBERS = {
 let members = [];
 let history = [];
 
-const groupCache = {};
-
 const nextPayerEl = document.getElementById("nextPayer");
 const countersContainer = document.getElementById("countersContainer");
 const historyContainer = document.querySelector(".card:last-of-type");
@@ -22,13 +20,14 @@ const registerButton = document.getElementById("registerButton");
 // ==========================
 // Cargar datos desde Google Sheets
 // ==========================
+
 async function loadData() {
   try {
     const response = await fetch(`${API_URL}?group=${encodeURIComponent(currentGroup)}`);
     history = await response.json();
 
     const memberNames = GROUP_MEMBERS[currentGroup] || [];
-
+    
     members = memberNames.map(name => ({
       name,
       count: history.filter(h => h.name === name).length
@@ -40,32 +39,6 @@ async function loadData() {
   } catch (error) {
     console.error("Error cargando datos:", error);
     alert("No se pudo conectar con Google Sheets.");
-  }
-}
-
-async function syncGroup() {
-  try {
-    const response = await fetch(`${API_URL}?group=${encodeURIComponent(currentGroup)}`);
-    history = await response.json();
-
-    const memberNames = GROUP_MEMBERS[currentGroup] || [];
-
-    members = memberNames.map(name => ({
-      name,
-      count: history.filter(h => h.name === name).length
-    }));
-
-    // Guardamos una copia en caché
-    groupCache[currentGroup] = {
-      history: [...history],
-      members: [...members]
-    };
-
-    document.getElementById("groupName").textContent = currentGroup;
-    render();
-
-  } catch (error) {
-    console.error("Error cargando datos:", error);
   }
 }
 
@@ -236,8 +209,8 @@ function openPayerModal() {
   confirm.className = "primary-button";
   confirm.textContent = "Confirmar";
   confirm.addEventListener("click", () => {
-    closeModal(overlay);        // Se cierra al instante
-    registerPayment(selectedName); // Se ejecuta en segundo plano
+    closeModal(overlay);
+    registerPayment(selectedName);
   });
 
   actions.append(cancel, confirm);
@@ -276,8 +249,8 @@ function openDeleteModal(entry) {
   confirm.className = "danger-button";
   confirm.textContent = "Eliminar";
   confirm.addEventListener("click", () => {
-    closeModal(overlay);       // Se cierra al instante
-    deleteHistoryEntry(entry); // Borrado y sincronización en segundo plano
+    closeModal(overlay);
+    deleteHistoryEntry(entry);
   });
 
   actions.append(cancel, confirm);
@@ -317,8 +290,8 @@ function openGroupModal() {
     button.addEventListener("click", () => {
       currentGroup = group;
       localStorage.setItem("coffeeGroup", group);
-      closeModal(overlay); // Se cierra inmediatamente
-      loadData();          // Carga el grupo en segundo plano
+      closeModal(overlay);
+      loadData();
     });
 
     list.appendChild(button);
@@ -371,16 +344,15 @@ async function registerPayment(name) {
         date: timestamp
       })
     });
-  
-    // En cuanto Google confirma el guardado, recargamos los datos
-    loadData();
-  
+    
+  loadData();
+
   } catch (error) {
     console.error("Error sincronizando con Google Sheets:", error);
-  
+
     // Si algo falla, recargamos desde Google
-    loadData();
-  
+    await loadData();
+
     alert("No se pudo sincronizar el registro.");
   }
 }
@@ -407,13 +379,12 @@ async function deleteHistoryEntry(entry) {
       })
     });
 
-    await loadData(true);
+    loadData();
 
   } catch (error) {
     console.error(error);
-    await loadData(true);
+    loadData();
   }
-}it loadData();
 }
 
 // ==========================
@@ -425,10 +396,8 @@ registerButton.addEventListener("click", openPayerModal);
 document.querySelector(".menu-button")
   .addEventListener("click", openGroupModal);
 
-// Carga inicial
 loadData();
 
-// Sincronizar cuando la app vuelve a primer plano
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") {
     loadData();
