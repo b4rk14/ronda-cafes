@@ -12,10 +12,10 @@ const members = [
 
 // Historial completo (la interfaz solo mostrará los últimos 5)
 const history = [
-  { name: "Breo", date: "07/08/2026" },
-  { name: "Iván", date: "31/07/2026" },
-  { name: "Ana", date: "23/07/2026" },
-  { name: "Iván", date: "18/07/2026" }
+  { name: "Breo", date: "07/08/2026 09:42" },
+  { name: "Iván", date: "31/07/2026 09:18" },
+  { name: "Ana", date: "23/07/2026 08:57" },
+  { name: "Iván", date: "18/07/2026 09:31" }
 ];
 
 let recommendedPayer = null;
@@ -30,12 +30,17 @@ const registerButton = document.getElementById("registerButton");
 // Utilidades
 // ==========================
 
-function getToday() {
+function getTimestamp() {
   const now = new Date();
+
   const d = String(now.getDate()).padStart(2, "0");
   const m = String(now.getMonth() + 1).padStart(2, "0");
   const y = now.getFullYear();
-  return `${d}/${m}/${y}`;
+
+  const h = String(now.getHours()).padStart(2, "0");
+  const min = String(now.getMinutes()).padStart(2, "0");
+
+  return `${d}/${m}/${y} ${h}:${min}`;
 }
 
 function chooseRecommendedPayer() {
@@ -62,14 +67,28 @@ function renderCounters() {
 
     countersContainer.appendChild(row);
   });
-}
 
-function renderHistory() {
+  function renderHistory() {
   const oldRows = historyContainer.querySelectorAll(".history-row");
   oldRows.forEach(r => r.remove());
 
-  // Últimos 3 registros, del más reciente al más antiguo
-  const recent = history.slice(-3).reverse();
+  const recent = [...history]
+    .sort((a, b) => {
+      const [dateA, timeA = "00:00"] = a.date.split(" ");
+      const [dateB, timeB = "00:00"] = b.date.split(" ");
+
+      const [da, ma, ya] = dateA.split("/").map(Number);
+      const [db, mb, yb] = dateB.split("/").map(Number);
+
+      const [ha, mina] = timeA.split(":").map(Number);
+      const [hb, minb] = timeB.split(":").map(Number);
+
+      const tsA = new Date(ya, ma - 1, da, ha, mina).getTime();
+      const tsB = new Date(yb, mb - 1, db, hb, minb).getTime();
+
+      return tsB - tsA;
+    })
+    .slice(0, 3);
 
   recent.forEach(item => {
     const row = document.createElement("div");
@@ -241,9 +260,9 @@ function registerPayment(name) {
   member.count += 1;
 
   history.push({
-    name,
-    date: getToday()
-  });
+  name,
+  date: getTimestamp()
+});
 
   render();
 }
