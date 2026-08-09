@@ -4,7 +4,10 @@ const GROUPS = ["Perenquenes", "Comando Café"];
 
 let currentGroup = localStorage.getItem("coffeeGroup") || "Perenquenes";
 
-const memberNames = ["Ana", "Iván", "Luis", "Breo"];
+const GROUP_MEMBERS = {
+  "Perenquenes": ["Ana", "Iván", "Luis", "Breo"],
+  "Comando Café": ["Elena", "Monje", "Breo"]
+};
 
 let members = [];
 let history = [];
@@ -23,6 +26,8 @@ async function loadData() {
     const response = await fetch(`${API_URL}?group=${encodeURIComponent(currentGroup)}`);
     history = await response.json();
 
+    const memberNames = GROUP_MEMBERS[currentGroup] || [];
+    
     members = memberNames.map(name => ({
       name,
       count: history.filter(h => h.name === name).length
