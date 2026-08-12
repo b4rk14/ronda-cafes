@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -11,55 +12,57 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
 
   <div class="app">
 
-<!-- Cabecera -->
-<header class="header">
-  <button class="menu-button" aria-label="Menú">⋮</button>
+    <!-- Cabecera -->
+    <header class="header">
+      <button class="menu-button" aria-label="Menú">⋮</button>
 
-  <div class="header-text">
-    <h1 id="groupName">Perenquenes</h1>
-<p class="subtitle">
-  <span class="coffee-icon">☕︎</span>
-  <span>Cafés & Desayunos</span>
-</p>
-  </div>
-</header>
+      <div class="header-text">
+        <h1 id="groupName">Perenquenes</h1>
+        <p class="subtitle">
+          <span class="coffee-icon">☕︎</span>
+          <span>Cafés & Desayunos</span>
+        </p>
+      </div>
+    </header>
 
-<!-- Siguiente pagador -->
-<section class="card next-card">
-  <h2>Le toca a...</h2>
-  <div id="nextPayer" class="next-payer">Luis</div>
-</section>
+    <!-- Siguiente pagador -->
+    <section class="card next-card">
+      <h2>Le toca a...</h2>
+      <div id="nextPayer" class="next-payer">Luis</div>
+    </section>
 
-<!-- Contadores -->
-<section class="card">
-  <h2>Contador</h2>
+    <!-- Contadores -->
+    <section class="card">
+      <h2>Contador</h2>
 
-  <div id="countersContainer">
-    <!-- Los contadores se generan desde app.js -->
-  </div>
-</section>
+      <div id="countersContainer">
+        <!-- Los contadores se generan desde app.js -->
+      </div>
+    </section>
 
-<!-- Botón principal -->
-<section class="card action-card">
-  <button id="registerButton" class="primary-button">
-    <span class="button-icon">☕︎</span>
-    <span>Registrar Café / Desayuno</span>
-  </button>
-</section>
+    <!-- Botón principal -->
+    <section class="card action-card">
+      <button id="registerButton" class="primary-button">
+        <span class="button-icon">☕︎</span>
+        <span>Registrar Café / Desayuno</span>
+      </button>
+    </section>
 
-<!-- Historial -->
-<section class="card">
-  <h2>Historial</h2>
-  <!-- El historial se genera desde app.js -->
-</section>
+    <!-- Historial -->
+    <section class="card">
+      <h2>Historial</h2>
+      <!-- El historial se genera desde app.js -->
+    </section>
 
   </div>
 
   <script src="app.js"></script>
 
 </body>
+
 </html>

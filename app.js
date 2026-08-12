@@ -27,7 +27,7 @@ async function loadData() {
     history = await response.json();
 
     const memberNames = GROUP_MEMBERS[currentGroup] || [];
-    
+
     members = memberNames.map(name => ({
       name,
       count: history.filter(h => h.name === name).length
@@ -130,9 +130,9 @@ function renderHistory() {
       >🗑️</button>
     `;
 
-row.querySelector(".delete-history").addEventListener("click", () => {
-  openDeleteModal(item);
-});
+    row.querySelector(".delete-history").addEventListener("click", () => {
+      openDeleteModal(item);
+    });
 
     historyContainer.appendChild(row);
   });
@@ -186,18 +186,18 @@ function openPayerModal() {
       <span>${member.name}</span>
       ${member.name === selectedName ? '<span class="star">★</span>' : ''}
     `;
-    
+
     button.addEventListener("click", () => {
       selectedName = member.name;
-    
+
       list.querySelectorAll(".member-option").forEach(el => {
         el.classList.remove("selected");
         const star = el.querySelector(".star");
         if (star) star.remove();
       });
-    
+
       button.classList.add("selected");
-    
+
       // Solo mostramos la estrella si el seleccionado tiene el contador mínimo
       if (member.count === minCount) {
         const star = document.createElement("span");
@@ -358,8 +358,8 @@ async function registerPayment(name) {
         date: timestamp
       })
     });
-    
-  loadData();
+
+    loadData();
 
   } catch (error) {
     console.error("Error sincronizando con Google Sheets:", error);
