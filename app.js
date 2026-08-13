@@ -1,12 +1,13 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbycHv1h_dSBfkMiW4D2I4CBvYOt6mrZtbpQZ55v5xNIXuqZTzBd2KR4-Kwg1fvxEdjLMA/exec";
 
-const GROUPS = ["Perenquenes", "Comando Café"];
+const GROUPS = ["Perenquenes", "Comando Café", "Naigan"];
 
 let currentGroup = localStorage.getItem("coffeeGroup") || "Perenquenes";
 
 const GROUP_MEMBERS = {
   "Perenquenes": ["Ana", "Iván", "Luis", "Breo"],
-  "Comando Café": ["Elena", "Monje", "Breo"]
+  "Comando Café": ["Elena", "Monje", "Breo"],
+  "Naigan": ["Breo", "Naira"]
 };
 
 let members = [];
