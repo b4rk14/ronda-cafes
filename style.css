@@ -31,6 +31,17 @@ body {
   padding: 22px 16px 40px;
 }
 
+.app > * {
+  transition: filter 0.18s ease, opacity 0.18s ease;
+}
+
+.app.group-loading > :not(.header),
+.app.group-loading .menu-button {
+  filter: blur(4px);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 /* ==========================
    Cabecera
    ========================== */

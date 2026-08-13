@@ -16,29 +16,42 @@ const nextPayerEl = document.getElementById("nextPayer");
 const countersContainer = document.getElementById("countersContainer");
 const historyContainer = document.querySelector(".card:last-of-type");
 const registerButton = document.getElementById("registerButton");
+const app = document.querySelector(".app");
+const groupNameEl = document.getElementById("groupName");
 
 // ==========================
 // Cargar datos desde Google Sheets
 // ==========================
 
 async function loadData() {
-  try {
-    const response = await fetch(`${API_URL}?group=${encodeURIComponent(currentGroup)}`);
-    history = await response.json();
+  const groupToLoad = currentGroup;
 
-    const memberNames = GROUP_MEMBERS[currentGroup] || [];
+  try {
+    const response = await fetch(`${API_URL}?group=${encodeURIComponent(groupToLoad)}`);
+    const loadedHistory = await response.json();
+
+    // Ignoramos respuestas de un grupo que ya no es el seleccionado.
+    if (groupToLoad !== currentGroup) return;
+
+    history = loadedHistory;
+
+    const memberNames = GROUP_MEMBERS[groupToLoad] || [];
 
     members = memberNames.map(name => ({
       name,
       count: history.filter(h => h.name === name).length
     }));
 
-    document.getElementById("groupName").textContent = currentGroup;
+    groupNameEl.textContent = groupToLoad;
 
     render();
   } catch (error) {
     console.error("Error cargando datos:", error);
     alert("No se pudo conectar con Google Sheets.");
+  } finally {
+    if (groupToLoad === currentGroup) {
+      app.classList.remove("group-loading");
+    }
   }
 }
 
@@ -301,8 +314,15 @@ function openGroupModal() {
     button.textContent = group;
 
     button.addEventListener("click", () => {
+      if (group === currentGroup) {
+        closeModal(overlay);
+        return;
+      }
+
       currentGroup = group;
       localStorage.setItem("coffeeGroup", group);
+      groupNameEl.textContent = currentGroup;
+      app.classList.add("group-loading");
       closeModal(overlay);
       loadData();
     });
