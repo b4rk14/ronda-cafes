@@ -371,6 +371,38 @@ body {
   font-size: 1rem;
 }
 
+.group-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.group-form-input {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 14px;
+  background: var(--row);
+  color: var(--text);
+  padding: 14px;
+  font: inherit;
+}
+
+.member-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.group-form > .secondary-button {
+  flex: none;
+}
+
+.form-error {
+  min-height: 1.2em;
+  color: #ff8a8a;
+  font-size: 0.9rem;
+}
+
 /* Estrella del recomendado */
 .star {
   color: var(--accent);

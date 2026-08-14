@@ -45,8 +45,13 @@ async function loadData() {
   }
 
   try {
-    // Usar DataService para obtener pagos
-    const payments = await DataService.getPayments(groupToLoad);
+    const customGroups = JSON.parse(localStorage.getItem("customGroups") || "[]");
+    const isCustomGroup = customGroups.some(grupo => grupo.id === groupToLoad);
+
+    // Los grupos locales aún no tienen una hoja asociada.
+    const payments = isCustomGroup
+      ? []
+      : await DataService.getPayments(groupToLoad);
 
     // Ignoramos respuestas de un grupo que ya no es el seleccionado.
     if (groupToLoad !== currentGroup) return;
@@ -339,9 +344,131 @@ function openGroupModal() {
     list.appendChild(button);
   });
 
+  const createButton = document.createElement("button");
+  createButton.className = "primary-button";
+  createButton.textContent = "Crear grupo";
+  createButton.addEventListener("click", () => {
+    closeModal(overlay);
+    openCreateGroupModal();
+  });
+
+  list.appendChild(createButton);
+
   modal.append(title, list);
   overlay.appendChild(modal);
   document.body.appendChild(overlay);
+}
+
+function openCreateGroupModal() {
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+
+  const modal = document.createElement("form");
+  modal.className = "modal group-form";
+
+  const title = document.createElement("h3");
+  title.textContent = "Crear grupo";
+
+  const nameLabel = document.createElement("label");
+  nameLabel.htmlFor = "newGroupName";
+  nameLabel.textContent = "Nombre del grupo";
+
+  const nameInput = document.createElement("input");
+  nameInput.id = "newGroupName";
+  nameInput.className = "group-form-input";
+  nameInput.type = "text";
+  nameInput.autocomplete = "off";
+  nameInput.required = true;
+
+  const membersLabel = document.createElement("span");
+  membersLabel.textContent = "Miembros (mínimo 2)";
+
+  const membersList = document.createElement("div");
+  membersList.className = "member-fields";
+
+  const addMemberField = () => {
+    const memberInput = document.createElement("input");
+    memberInput.className = "group-form-input";
+    memberInput.type = "text";
+    memberInput.placeholder = "Nombre del miembro";
+    memberInput.autocomplete = "off";
+    membersList.appendChild(memberInput);
+  };
+
+  addMemberField();
+  addMemberField();
+
+  const addMemberButton = document.createElement("button");
+  addMemberButton.className = "secondary-button";
+  addMemberButton.type = "button";
+  addMemberButton.textContent = "Añadir miembro";
+  addMemberButton.addEventListener("click", addMemberField);
+
+  const error = document.createElement("p");
+  error.className = "form-error";
+
+  const actions = document.createElement("div");
+  actions.className = "modal-actions";
+
+  const cancel = document.createElement("button");
+  cancel.className = "secondary-button";
+  cancel.type = "button";
+  cancel.textContent = "Cancelar";
+  cancel.addEventListener("click", () => closeModal(overlay));
+
+  const confirm = document.createElement("button");
+  confirm.className = "primary-button";
+  confirm.type = "submit";
+  confirm.textContent = "Crear";
+
+  modal.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const nombre = nameInput.value.trim();
+    const miembros = [...membersList.querySelectorAll("input")]
+      .map(input => input.value.trim())
+      .filter(Boolean);
+
+    if (!nombre) {
+      error.textContent = "Introduce un nombre para el grupo.";
+      return;
+    }
+
+    if (miembros.length < 2) {
+      error.textContent = "Añade al menos dos miembros.";
+      return;
+    }
+
+    try {
+      const grupo = await DataService.createGroup(nombre, miembros);
+      allGroups.push(grupo);
+      currentGroup = grupo.id;
+      localStorage.setItem("coffeeGroup", currentGroup);
+      members = grupo.miembros.map(name => ({ name, count: 0 }));
+      history = [];
+      groupNameEl.textContent = grupo.nombre;
+      app.classList.remove("group-loading");
+      closeModal(overlay);
+      render();
+    } catch (creationError) {
+      error.textContent = creationError.message;
+    }
+  });
+
+  actions.append(cancel, confirm);
+  modal.append(
+    title,
+    nameLabel,
+    nameInput,
+    membersLabel,
+    membersList,
+    addMemberButton,
+    error,
+    actions
+  );
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+  nameInput.focus();
 }
 
 // ==========================
