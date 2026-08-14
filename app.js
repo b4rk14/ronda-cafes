@@ -1,14 +1,5 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbycHv1h_dSBfkMiW4D2I4CBvYOt6mrZtbpQZ55v5xNIXuqZTzBd2KR4-Kwg1fvxEdjLMA/exec";
-
-const GROUPS = ["Perenquenes", "Comando Café", "Naigan"];
-
-let currentGroup = localStorage.getItem("coffeeGroup") || "Perenquenes";
-
-const GROUP_MEMBERS = {
-  "Perenquenes": ["Ana", "Iván", "Luis", "Breo"],
-  "Comando Café": ["Elena", "Monje", "Breo"],
-  "Naigan": ["Breo", "Naira"]
-};
+let allGroups = [];  // Grupos cargados desde DataService
+let currentGroup = localStorage.getItem("coffeeGroup") || null;  // Se valida en initializeApp()
 
 let members = [];
 let history = [];
@@ -21,34 +12,64 @@ const app = document.querySelector(".app");
 const groupNameEl = document.getElementById("groupName");
 
 // ==========================
-// Cargar datos desde Google Sheets
+// Inicializar aplicación
+// ==========================
+
+async function initializeApp() {
+  try {
+    allGroups = await DataService.getGroups();
+
+    // Validar que currentGroup existe
+    if (!currentGroup || !allGroups.find(g => g.id === currentGroup)) {
+      currentGroup = allGroups[0]?.id || null;
+      if (currentGroup) localStorage.setItem("coffeeGroup", currentGroup);
+    }
+
+    loadData();
+  } catch (error) {
+    console.error("Error inicializando:", error);
+    alert("No se pudo cargar los grupos.");
+  }
+}
+
+// ==========================
+// Cargar datos del grupo actual
 // ==========================
 
 async function loadData() {
   const groupToLoad = currentGroup;
 
+  if (!groupToLoad) {
+    console.error("No hay grupo seleccionado");
+    return;
+  }
+
   try {
-    const response = await fetch(`${API_URL}?group=${encodeURIComponent(groupToLoad)}`);
-    const loadedHistory = await response.json();
+    // Usar DataService para obtener pagos
+    const payments = await DataService.getPayments(groupToLoad);
 
     // Ignoramos respuestas de un grupo que ya no es el seleccionado.
     if (groupToLoad !== currentGroup) return;
 
-    history = loadedHistory;
+    history = payments;
 
-    const memberNames = GROUP_MEMBERS[groupToLoad] || [];
+    // Obtener miembros del grupo desde allGroups
+    const grupo = allGroups.find(g => g.id === groupToLoad);
+    const memberNames = grupo?.miembros || [];
 
     members = memberNames.map(name => ({
       name,
-      count: history.filter(h => h.name === name).length
+      count: history.filter(h => h.nombre === name).length
     }));
 
-    groupNameEl.textContent = groupToLoad;
+    if (grupo?.nombre) {
+      groupNameEl.textContent = grupo.nombre;
+    }
 
     render();
   } catch (error) {
     console.error("Error cargando datos:", error);
-    alert("No se pudo conectar con Google Sheets.");
+    alert("No se pudo conectar con el servicio.");
   } finally {
     if (groupToLoad === currentGroup) {
       app.classList.remove("group-loading");
@@ -59,20 +80,7 @@ async function loadData() {
 // ==========================
 // Utilidades
 // ==========================
-
-function getTimestamp() {
-  const now = new Date();
-
-  const d = String(now.getDate()).padStart(2, "0");
-  const m = String(now.getMonth() + 1).padStart(2, "0");
-  const y = now.getFullYear();
-
-  const h = String(now.getHours()).padStart(2, "0");
-  const min = String(now.getMinutes()).padStart(2, "0");
-  const sec = String(now.getSeconds()).padStart(2, "0");
-
-  return `${d}/${m}/${y} ${h}:${min}:${sec}`;
-}
+// Nota: getTimestamp() está centralizado en DataService
 
 function getRecommendedPayer() {
   return members.reduce((lowest, current) =>
@@ -135,7 +143,7 @@ function renderHistory() {
     const [hours, minutes] = time.split(":");
 
     row.innerHTML = `
-      <span class="name">${item.name}</span>
+      <span class="name">${item.nombre}</span>
       <div class="history-date-time">${date} ${hours}:${minutes}</div>
       <button
         class="delete-history"
@@ -260,7 +268,7 @@ function openDeleteModal(entry) {
   const record = document.createElement("div");
   record.className = "delete-record";
   record.innerHTML = `
-    <div class="delete-name">${entry.name}</div>
+    <div class="delete-name">${entry.nombre}</div>
     <div class="delete-date">${entry.date}</div>
   `;
 
@@ -288,7 +296,7 @@ function openDeleteModal(entry) {
 }
 
 // ==========================
-// Selector de grupos  <--- AQUÍ
+// Selector de grupos
 // ==========================
 
 function openGroupModal() {
@@ -304,25 +312,25 @@ function openGroupModal() {
   const list = document.createElement("div");
   list.className = "modal-list";
 
-  GROUPS.forEach(group => {
+  allGroups.forEach(grupo => {
     const button = document.createElement("button");
     button.className = "member-option";
 
-    if (group === currentGroup) {
+    if (grupo.id === currentGroup) {
       button.classList.add("selected");
     }
 
-    button.textContent = group;
+    button.textContent = grupo.nombre;
 
     button.addEventListener("click", () => {
-      if (group === currentGroup) {
+      if (grupo.id === currentGroup) {
         closeModal(overlay);
         return;
       }
 
-      currentGroup = group;
-      localStorage.setItem("coffeeGroup", group);
-      groupNameEl.textContent = currentGroup;
+      currentGroup = grupo.id;
+      localStorage.setItem("coffeeGroup", currentGroup);
+      groupNameEl.textContent = grupo.nombre;
       app.classList.add("group-loading");
       closeModal(overlay);
       loadData();
@@ -341,19 +349,20 @@ function openGroupModal() {
 // ==========================
 
 async function registerPayment(name) {
-  // Guardamos la fecha una sola vez
-  const timestamp = getTimestamp();
+  // Guardar timestamp usando DataService
+  const timestamp = DataService.getTimestamp();
 
   // -------------------------
-  // Actualización inmediata
+  // Actualización inmediata (optimista)
   // -------------------------
 
   // Añadir el registro al historial local
   history.push({
     id: Date.now(),
-    name,
+    nombre: name,
     date: timestamp,
-    pending: true
+    pending: true,
+    groupId: currentGroup
   });
 
   // Incrementar el contador local
@@ -366,26 +375,17 @@ async function registerPayment(name) {
   render();
 
   // -------------------------
-  // Sincronización con Google
+  // Sincronización con DataService
   // -------------------------
 
   try {
-    await fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain" },
-      body: JSON.stringify({
-        group: currentGroup,
-        name,
-        date: timestamp
-      })
-    });
-
+    await DataService.addPayment(currentGroup, name);
     loadData();
 
   } catch (error) {
-    console.error("Error sincronizando con Google Sheets:", error);
+    console.error("Error sincronizando:", error);
 
-    // Si algo falla, recargamos desde Google
+    // Si algo falla, recargamos desde el servicio
     await loadData();
 
     alert("No se pudo sincronizar el registro.");
@@ -396,7 +396,7 @@ async function deleteHistoryEntry(entry) {
   // Actualización inmediata
   history = history.filter(h => h.id !== entry.id);
 
-  const member = members.find(m => m.name === entry.name);
+  const member = members.find(m => m.name === entry.nombre);
   if (member && member.count > 0) {
     member.count--;
   }
@@ -404,15 +404,17 @@ async function deleteHistoryEntry(entry) {
   render();
 
   try {
-    await fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain" },
-      body: JSON.stringify({
-        _method: "DELETE",
-        group: currentGroup,
-        id: entry.id
-      })
-    });
+    // Pasar metadata necesaria para que DataService pueda eliminar en Sheets
+    const metadata = {
+      groupId: entry.groupId,
+      groupName: allGroups.find(g => g.id === entry.groupId)?.nombre
+    };
+    
+    const result = await DataService.deletePayment(entry.id, metadata);
+    
+    if (!result.success) {
+      throw new Error("No se pudo eliminar el registro");
+    }
 
     loadData();
 
@@ -431,7 +433,7 @@ registerButton.addEventListener("click", openPayerModal);
 document.querySelector(".menu-button")
   .addEventListener("click", openGroupModal);
 
-loadData();
+initializeApp();
 
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") {
