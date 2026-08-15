@@ -5,7 +5,7 @@
 // con la capa de persistencia. Permite cambiar de backend
 // (Google Sheets → Firestore/Supabase) sin tocar app.js
 
-const API_URL = "https://script.google.com/macros/s/AKfycbycHv1h_dSBfkMiW4D2I4CBvYOt6mrZtbpQZ55v5xNIXuqZTzBd2KR4-Kwg1fvxEdjLMA/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwexvQa1BlnqcpFU4azAn-WPThDZJ5uEJ-wU2Dh45bTdXEevslpR2vGYRwHxrn-hbSqQw/exec";
 
 const DataService = {
   async getGroups() {
@@ -58,13 +58,50 @@ const GoogleSheetsImpl = {
   },
 
   async getGroups() {
-    // Convertir estructura interna a formato DataService
-    const grupos = Object.values(this.GROUPS_STATIC);
-    
-    // Si hay grupos guardados en localStorage (creados después), agregarlos
-    const customGroups = JSON.parse(localStorage.getItem("customGroups") || "[]");
-    
-    return [...grupos, ...customGroups];
+    try {
+      const grupos = await this.getGroupsJsonp();
+      if (!Array.isArray(grupos) || !grupos.every(this.isValidGroup)) {
+        throw new Error("Respuesta de grupos no válida");
+      }
+
+      return grupos;
+    } catch (error) {
+      console.warn("No se pudieron cargar los grupos remotos; usando fallback local:", error);
+      return this.getLocalGroups();
+    }
+  },
+
+  getGroupsJsonp() {
+    return new Promise((resolve, reject) => {
+      const callbackName = "__coffeeGroupsCallback_" +
+        Date.now() + "_" + Math.random().toString(36).slice(2, 11);
+      const script = document.createElement("script");
+      let timeoutId;
+
+      const cleanup = () => {
+        clearTimeout(timeoutId);
+        script.remove();
+        delete window[callbackName];
+      };
+
+      window[callbackName] = grupos => {
+        cleanup();
+        resolve(grupos);
+      };
+
+      script.onerror = () => {
+        cleanup();
+        reject(new Error("No se pudieron cargar los grupos remotos"));
+      };
+
+      timeoutId = setTimeout(() => {
+        cleanup();
+        reject(new Error("Tiempo de espera agotado al cargar los grupos"));
+      }, 10000);
+
+      script.src = `${API_URL}?action=groups&callback=${encodeURIComponent(callbackName)}`;
+      document.head.appendChild(script);
+    });
   },
 
   async createGroup(nombre, miembros) {
@@ -76,22 +113,70 @@ const GoogleSheetsImpl = {
       throw new Error("Mínimo 2 miembros requeridos");
     }
 
-    // Generar ID único (UUID simple)
-    const id = "grp_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
-
-    const grupo = {
-      id,
+    const groupRequest = {
+      id: this.createGroupId(),
       nombre: nombre.trim(),
-      miembros: miembros.map(m => m.trim()),
-      createdAt: new Date().toISOString()
+      miembros: miembros.map(m => m.trim())
     };
 
-    // Guardar en localStorage (temporal, hasta migración a Sheets)
-    const customGroups = JSON.parse(localStorage.getItem("customGroups") || "[]");
-    customGroups.push(grupo);
-    localStorage.setItem("customGroups", JSON.stringify(customGroups));
+    try {
+      const response = await fetch(`${API_URL}?action=groups`, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify(groupRequest)
+      });
 
-    return grupo;
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const result = await response.json();
+      if (!result.success || !this.isValidGroup(result.group)) {
+        throw new Error(result.error || "Respuesta de creación no válida");
+      }
+
+      return result.group;
+    } catch (error) {
+      console.error("Error en createGroup:", error);
+      throw new Error("No se pudo guardar el grupo. Inténtalo de nuevo.");
+    }
+  },
+
+  isValidGroup(group) {
+    return Boolean(
+      group &&
+      typeof group.id === "string" &&
+      group.id.trim() &&
+      typeof group.nombre === "string" &&
+      group.nombre.trim() &&
+      Array.isArray(group.miembros) &&
+      group.miembros.length >= 2 &&
+      group.miembros.every(member => typeof member === "string" && member.trim())
+    );
+  },
+
+  getLocalGroups() {
+    const grupos = Object.values(this.GROUPS_STATIC);
+
+    try {
+      const storedGroups = JSON.parse(localStorage.getItem("customGroups") || "[]");
+      const customGroups = Array.isArray(storedGroups)
+        ? storedGroups.filter(this.isValidGroup)
+        : [];
+
+      return [...grupos, ...customGroups];
+    } catch (error) {
+      console.warn("No se pudieron leer los grupos locales:", error);
+      return grupos;
+    }
+  },
+
+  createGroupId() {
+    if (typeof crypto !== "undefined" && crypto.randomUUID) {
+      return `grp_${crypto.randomUUID()}`;
+    }
+
+    return "grp_" + Date.now() + "_" + Math.random().toString(36).slice(2, 11);
   },
 
   async getPayments(groupId) {
